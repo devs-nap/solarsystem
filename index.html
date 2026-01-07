@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Explorer Advanced | NASA x ESA x SpaceX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4fc3f7;
+            --secondary-color: #3a5fd0;
+            --accent-color: #ff6b6b;
+            --dark-bg: #0a0a2a;
+            --panel-bg: rgba(10, 15, 40, 0.95);
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(90deg, var(--dark-bg), #1a1a3a);
+            padding: 12px 24px;
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo i {
+            font-size: 28px;
+            color: var(--primary-color);
+            animation: pulse 2s infinite;
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            background: linear-gradient(90deg, var(--primary-color), #00e5ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .resources {
+            display: flex;
+            gap: 24px;
+        }
+
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            transition: all 0.3s;
+        }
+
+        .resource-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .resource-item i {
+            color: var(--primary-color);
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* SOLAR SYSTEM CANVAS */
+        .solar-system-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #solarCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #000428 0%, #020111 50%, #090a0f 100%);
+        }
+
+        /* RIGHT PANEL - PLANET INFO */
+        .right-panel {
+            width: 380px;
+            background: var(--panel-bg);
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .planet-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .planet-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            box-shadow: 0 0 30px currentColor;
+            position: relative;
+        }
+
+        .planet-icon::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            background: inherit;
+            filter: blur(15px);
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        .planet-info h2 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .planet-type {
+            color: var(--primary-color);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .planet-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .detail-item {
+            background: linear-gradient(135deg, rgba(30, 40, 80, 0.8), rgba(20, 25, 60, 0.8));
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .detail-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #a0c8ff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .planet-chart {
+            margin: 20px 0;
+            background: rgba(30, 40, 80, 0.6);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        /* HUD CONTROLS */
+        .hud-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(10, 15, 40, 0.9), rgba(5, 10, 30, 0.9));
+            padding: 20px 30px;
+            border-radius: 20px;
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            z-index: 50;
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .hud-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hud-button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 1%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .hud-button:hover::after {
+            opacity: 1;
+        }
+
+        .hud-button:hover {
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 0 30px rgba(79, 195, 247, 0.7);
+        }
+
+        .hud-info {
+            display: flex;
+            gap: 40px;
+            color: white;
+        }
+
+        .hud-item {
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .hud-label {
+            font-size: 12px;
+            color: #a0c8ff;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .hud-value {
+            font-size: 22px;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--primary-color), #00e5ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* SYSTEM CONTROLS */
+        .system-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 50;
+        }
+
+        .control-btn {
+            padding: 12px 18px;
+            background: linear-gradient(135deg, rgba(10, 15, 40, 0.9), rgba(5, 10, 30, 0.9));
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .control-btn:hover {
+            background: rgba(79, 195, 247, 0.2);
+            transform: translateX(-5px);
+            border-color: var(--primary-color);
+        }
+
+        /* NOTIFICATIONS */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #1a3a8a, #2a4bb0);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 350px;
+            z-index: 1000;
+            animation: slideIn 0.5s ease;
+            border-left: 5px solid var(--primary-color);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification h4 {
+            color: white;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .notification p {
+            color: #e0e0ff;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* TRAVEL MODE */
+        .travel-mode {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(10, 15, 40, 0.95), rgba(5, 10, 30, 0.95));
+            padding: 40px;
+            border-radius: 20px;
+            z-index: 200;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 50px rgba(79, 195, 247, 0.5);
+            backdrop-filter: blur(20px);
+            display: none;
+        }
+
+        .travel-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .travel-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .travel-progress {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        .travel-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #00e5ff);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+            position: relative;
+        }
+
+        .travel-progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        /* ANIMATIONS */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .right-panel {
+                position: absolute;
+                top: 70px;
+                bottom: 0;
+                right: 0;
+                z-index: 100;
+                transform: translateX(100%);
+                transition: transform 0.3s;
+                width: 300px;
+            }
+            
+            .right-panel.active {
+                transform: translateX(0);
+            }
+            
+            .hud-controls {
+                flex-direction: column;
+                padding: 20px;
+                bottom: 10px;
+            }
+            
+            .hud-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+                <h1>SOLAR SYSTEM EXPLORER: NEXUS EDITION</h1>
+            </div>
+            <div class="resources">
+                <div class="resource-item">
+                    <i class="fas fa-coins"></i>
+                    <span id="credits">12,450</span>
+                </div>
+                <div class="resource-item">
+                    <i class="fas fa-gas-pump"></i>
+                    <span id="fuel">94%</span>
+                </div>
+                <div class="resource-item">
+                    <i class="fas fa-flask"></i>
+                    <span id="science">1,850</span>
+                </div>
+                <div class="resource-item">
+                    <i class="fas fa-atom"></i>
+                    <span id="energy">100%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- SOLAR SYSTEM -->
+            <div class="solar-system-container">
+                <canvas id="solarCanvas"></canvas>
+                
+                <!-- SYSTEM CONTROLS -->
+                <div class="system-controls">
+                    <button class="control-btn" id="toggleOrbits">
+                        <i class="fas fa-circle-notch"></i>
+                        Orbits
+                    </button>
+                    <button class="control-btn" id="toggleLabels">
+                        <i class="fas fa-tag"></i>
+                        Labels
+                    </button>
+                    <button class="control-btn" id="toggleGrid">
+                        <i class="fas fa-th"></i>
+                        Grid
+                    </button>
+                    <button class="control-btn" id="zoomIn">
+                        <i class="fas fa-search-plus"></i>
+                        Zoom In
+                    </button>
+                    <button class="control-btn" id="zoomOut">
+                        <i class="fas fa-search-minus"></i>
+                        Zoom Out
+                    </button>
+                    <button class="control-btn" id="resetView">
+                        <i class="fas fa-crosshairs"></i>
+                        Reset
+                    </button>
+                    <button class="control-btn" id="togglePhysics">
+                        <i class="fas fa-atom"></i>
+                        Physics
+                    </button>
+                </div>
+
+                <!-- HUD CONTROLS -->
+                <div class="hud-controls">
+                    <div class="hud-info">
+                        <div class="hud-item">
+                            <div class="hud-label">TARGET</div>
+                            <div class="hud-value" id="hudTarget">MARS</div>
+                        </div>
+                        <div class="hud-item">
+                            <div class="hud-label">DISTANCE</div>
+                            <div class="hud-value" id="hudDistance">0.52 AU</div>
+                        </div>
+                        <div class="hud-item">
+                            <div class="hud-label">RELATIVE VELOCITY</div>
+                            <div class="hud-value" id="hudVelocity">5.2 km/s</div>
+                        </div>
+                        <div class="hud-item">
+                            <div class="hud-label">ARRIVAL IN</div>
+                            <div class="hud-value" id="hudTime">ARRIVED</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <button class="hud-button" id="scanBtn" title="Deep Scan">
+                            <i class="fas fa-satellite-dish"></i>
+                        </button>
+                        <button class="hud-button" id="collectBtn" title="Collect Sample">
+                            <i class="fas fa-vial"></i>
+                        </button>
+                        <button class="hud-button" id="analyzeBtn" title="Analyze">
+                            <i class="fas fa-microscope"></i>
+                        </button>
+                        <button class="hud-button" id="travelBtn" title="Travel">
+                            <i class="fas fa-rocket"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TRAVEL MODE OVERLAY -->
+                <div class="travel-mode" id="travelMode">
+                    <div class="travel-header">
+                        <h2 style="color: var(--primary-color); margin-bottom: 10px;">INTERPLANETARY TRAVEL</h2>
+                        <p id="travelTarget">Traveling to: Mars</p>
+                    </div>
+                    <div class="travel-stats">
+                        <div class="detail-item">
+                            <div class="detail-label">TRIP DURATION</div>
+                            <div class="detail-value" id="travelDuration">142 days</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">FUEL CONSUMPTION</div>
+                            <div class="detail-value" id="travelFuel">18%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">DELTA-V REQUIRED</div>
+                            <div class="detail-value" id="travelDeltaV">4.3 km/s</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">OPTIMAL TRAJECTORY</div>
+                            <div class="detail-value" id="travelTrajectory">Hohmann</div>
+                        </div>
+                    </div>
+                    <div class="travel-progress">
+                        <div class="travel-progress-bar" id="travelProgressBar"></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="control-btn" id="cancelTravel" style="background: var(--danger-color);">
+                            <i class="fas fa-times"></i>
+                            Cancel Travel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MOBILE TOGGLE BUTTONS -->
+                <div class="toggle-panel toggle-right floating" id="toggleRightPanel">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL -->
+            <div class="right-panel" id="rightPanel">
+                <div class="planet-header">
+                    <div class="planet-icon floating" id="planetIcon" style="background: linear-gradient(135deg, #C1440E, #8B2E00);">
+                        <i class="fas fa-globe-americas"></i>
+                    </div>
+                    <div class="planet-info">
+                        <h2 id="planetName">MARS</h2>
+                        <div class="planet-type">
+                            <i class="fas fa-mountain"></i>
+                            <span id="planetType">TERRESTRIAL PLANET</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-title" style="color: var(--primary-color); margin: 20px 0 15px 0; display: flex; align-items: center; gap: 10px; font-size: 16px; border-bottom: 1px solid rgba(79, 195, 247, 0.3); padding-bottom: 8px;">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>PLANETARY ANALYSIS</h3>
+                </div>
+                <div class="planet-details">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-thermometer-half"></i> TEMPERATURE</div>
+                        <div class="detail-value" id="planetTemp">-63°C</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-weight-hanging"></i> GRAVITY</div>
+                        <div class="detail-value" id="planetGravity">0.38g</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-expand-arrows-alt"></i> DIAMETER</div>
+                        <div class="detail-value" id="planetDiameter">6,779 km</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-clock"></i> SOLAR DAY</div>
+                        <div class="detail-value" id="planetDay">24.6 HOURS</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-sun"></i> SOLAR CONSTANT</div>
+                        <div class="detail-value" id="planetSolar">586 W/m²</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-wind"></i> ATMOSPHERE</div>
+                        <div class="detail-value" id="planetAtmo">CO₂ (95%)</div>
+                    </div>
+                </div>
+
+                <div class="planet-chart">
+                    <canvas id="planetChart" height="150"></canvas>
+                </div>
+
+                <div class="panel-title" style="color: var(--primary-color); margin: 20px 0 15px 0; display: flex; align-items: center; gap: 10px; font-size: 16px; border-bottom: 1px solid rgba(79, 195, 247, 0.3); padding-bottom: 8px;">
+                    <i class="fas fa-search"></i>
+                    <h3>SCAN RESULTS</h3>
+                </div>
+                <div id="scanResults" style="color: #a0c8ff; font-size: 14px; padding: 15px; background: linear-gradient(135deg, rgba(30,40,80,0.8), rgba(20,25,60,0.8)); border-radius: 10px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <i class="fas fa-info-circle" style="color: var(--primary-color);"></i>
+                        <span>Select a planet and initiate deep scan for detailed analysis.</span>
+                    </div>
+                    <div id="resourceGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <!-- Resources will appear here -->
+                    </div>
+                </div>
+
+                <div class="panel-title" style="color: var(--primary-color); margin: 20px 0 15px 0; display: flex; align-items: center; gap: 10px; font-size: 16px; border-bottom: 1px solid rgba(79, 195, 247, 0.3); padding-bottom: 8px;">
+                    <i class="fas fa-scroll"></i>
+                    <h3>MISSION LOG</h3>
+                </div>
+                <div id="discoveryLog" style="color: #e0e0ff; font-size: 13px; max-height: 200px; overflow-y: auto;">
+                    <!-- Log entries will be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // SOLAR SYSTEM EXPLORER ADVANCED
+        // ============================================
+
+        // Enhanced Game State
+        const GameState = {
+            credits: 12450,
+            fuel: 94,
+            science: 1850,
+            energy: 100,
+            currentPlanet: 'Mars',
+            selectedPlanet: 'Mars',
+            isTraveling: false,
+            travelTarget: null,
+            travelProgress: 0,
+            travelSpeed: 0.5,
+            discoveredPlanets: ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars'],
+            inventory: {
+                'Water': { count: 5, icon: 'fa-tint', color: '#1E90FF' },
+                'Minerals': { count: 12, icon: 'fa-gem', color: '#FFD700' },
+                'Gases': { count: 8, icon: 'fa-wind', color: '#98FB98' },
+                'Organic': { count: 3, icon: 'fa-seedling', color: '#32CD32' },
+                'Metals': { count: 7, icon: 'fa-cog', color: '#C0C0C0' },
+                'Data': { count: 15, icon: 'fa-database', color: '#4fc3f7' }
+            },
+            spacecraft: {
+                integrity: 100,
+                scannerTier: 3,
+                speed: 42,
+                range: 12.4,
+                shielding: 85
+            }
+        };
+
+        // Enhanced Planetary Data with scientific accuracy
+        const PLANETS = {
+            Sun: {
+                name: 'Sun',
+                type: 'G-Type Main Sequence Star',
+                color: '#FFD700',
+                radius: 30,
+                orbitRadius: 0,
+                temperature: '5,500°C',
+                gravity: '28.0g',
+                diameter: '1,392,684 km',
+                dayLength: '25-35 days',
+                solarConstant: '1361 W/m²',
+                atmosphere: 'Hydrogen (73%), Helium (25%)',
+                resources: ['Solar Energy', 'Helium-3', 'Hydrogen Plasma'],
+                description: 'The star at the center of our Solar System. Source of 99.86% of the system\'s mass.',
+                composition: { Hydrogen: 73.4, Helium: 24.8, Oxygen: 0.77, Carbon: 0.29, Iron: 0.16 },
+                axialTilt: 7.25,
+                escapeVelocity: 617.7,
+                orbitalPeriod: 0
+            },
+            Mercury: {
+                name: 'Mercury',
+                type: 'Terrestrial Planet',
+                color: '#A9A9A9',
+                radius: 6,
+                orbitRadius: 60,
+                temperature: '430°C (day), -180°C (night)',
+                gravity: '0.38g',
+                diameter: '4,879 km',
+                dayLength: '59 Earth days',
+                solarConstant: '9,126 W/m²',
+                atmosphere: 'Trace',
+                resources: ['Iron', 'Silicates', 'Trace Metals', 'Sulfur'],
+                description: 'The smallest and innermost planet. Extreme temperature variations.',
+                composition: { Iron: 70, Silicates: 30 },
+                axialTilt: 0.034,
+                escapeVelocity: 4.25,
+                orbitalPeriod: 88
+            },
+            Venus: {
+                name: 'Venus',
+                type: 'Terrestrial Planet',
+                color: '#FFA500',
+                radius: 10,
+                orbitRadius: 85,
+                temperature: '462°C',
+                gravity: '0.91g',
+                diameter: '12,104 km',
+                dayLength: '243 Earth days',
+                solarConstant: '2,601 W/m²',
+                atmosphere: 'CO₂ (96.5%), N₂ (3.5%)',
+                resources: ['Carbon Dioxide', 'Sulfuric Acid', 'Rare Minerals', 'Deuterium'],
+                description: 'The second planet from the Sun. Runaway greenhouse effect.',
+                composition: { Silicates: 65, Iron: 32, Sulfur: 2 },
+                axialTilt: 177.3,
+                escapeVelocity: 10.36,
+                orbitalPeriod: 225
+            },
+            Earth: {
+                name: 'Earth',
+                type: 'Terrestrial Planet',
+                color: '#1E90FF',
+                radius: 11,
+                orbitRadius: 115,
+                temperature: '15°C (average)',
+                gravity: '1.00g',
+                diameter: '12,742 km',
+                dayLength: '24 hours',
+                solarConstant: '1,361 W/m²',
+                atmosphere: 'N₂ (78%), O₂ (21%), Ar (1%)',
+                resources: ['Water', 'Oxygen', 'Minerals', 'Biological Samples'],
+                description: 'Our home planet. Only known celestial body to harbor life.',
+                composition: { Iron: 32, Oxygen: 30, Silicon: 15, Magnesium: 14 },
+                axialTilt: 23.44,
+                escapeVelocity: 11.19,
+                orbitalPeriod: 365.25
+            },
+            Mars: {
+                name: 'Mars',
+                type: 'Terrestrial Planet',
+                color: '#FF4500',
+                radius: 9,
+                orbitRadius: 145,
+                temperature: '-63°C (average)',
+                gravity: '0.38g',
+                diameter: '6,779 km',
+                dayLength: '24.6 hours',
+                solarConstant: '586 W/m²',
+                atmosphere: 'CO₂ (95%), N₂ (2.8%), Ar (2%)',
+                resources: ['Iron Oxide', 'Water Ice', 'Methane', 'Perchlorates'],
+                description: 'The Red Planet. Evidence of past liquid water.',
+                composition: { Iron: 45, Silicon: 25, Magnesium: 15, Oxygen: 10 },
+                axialTilt: 25.19,
+                escapeVelocity: 5.03,
+                orbitalPeriod: 687,
+                moons: ['Phobos', 'Deimos']
+            },
+            Jupiter: {
+                name: 'Jupiter',
+                type: 'Gas Giant',
+                color: '#FFD580',
+                radius: 25,
+                orbitRadius: 190,
+                temperature: '-108°C',
+                gravity: '2.53g',
+                diameter: '139,820 km',
+                dayLength: '9.9 hours',
+                solarConstant: '50 W/m²',
+                atmosphere: 'H₂ (90%), He (10%)',
+                resources: ['Hydrogen', 'Helium', 'Ammonia', 'Deuterium'],
+                description: 'The largest planet. Strong magnetic field and numerous moons.',
+                composition: { Hydrogen: 90, Helium: 10 },
+                axialTilt: 3.13,
+                escapeVelocity: 59.5,
+                orbitalPeriod: 4333,
+                moons: ['Io', 'Europa', 'Ganymede', 'Callisto']
+            },
+            Saturn: {
+                name: 'Saturn',
+                type: 'Gas Giant',
+                color: '#F0E68C',
+                radius: 22,
+                orbitRadius: 230,
+                temperature: '-139°C',
+                gravity: '1.07g',
+                diameter: '116,460 km',
+                dayLength: '10.7 hours',
+                solarConstant: '15 W/m²',
+                atmosphere: 'H₂ (96%), He (3%)',
+                resources: ['Hydrogen', 'Helium', 'Ice Particles', 'Hydrocarbons'],
+                description: 'Famous for its ring system. Least dense planet.',
+                composition: { Hydrogen: 96, Helium: 3, Methane: 0.2 },
+                axialTilt: 26.73,
+                escapeVelocity: 35.5,
+                orbitalPeriod: 10759,
+                ringSystem: true
+            },
+            Uranus: {
+                name: 'Uranus',
+                type: 'Ice Giant',
+                color: '#AFEEEE',
+                radius: 18,
+                orbitRadius: 260,
+                temperature: '-197°C',
+                gravity: '0.89g',
+                diameter: '50,724 km',
+                dayLength: '17.2 hours',
+                solarConstant: '4 W/m²',
+                atmosphere: 'H₂ (83%), He (15%), CH₄ (2%)',
+                resources: ['Water', 'Ammonia', 'Methane Ice', 'Rocky Core'],
+                description: 'The sideways planet. Unique axial tilt of 98 degrees.',
+                composition: { Hydrogen: 83, Helium: 15, Methane: 2 },
+                axialTilt: 97.77,
+                escapeVelocity: 21.3,
+                orbitalPeriod: 30687
+            },
+            Neptune: {
+                name: 'Neptune',
+                type: 'Ice Giant',
+                color: '#4169E1',
+                radius: 17,
+                orbitRadius: 285,
+                temperature: '-201°C',
+                gravity: '1.14g',
+                diameter: '49,244 km',
+                dayLength: '16.1 hours',
+                solarConstant: '2 W/m²',
+                atmosphere: 'H₂ (80%), He (19%), CH₄ (1%)',
+                resources: ['Water', 'Ammonia', 'Methane', 'Diamonds'],
+                description: 'The windiest planet. Strongest sustained winds in Solar System.',
+                composition: { Hydrogen: 80, Helium: 19, Methane: 1 },
+                axialTilt: 28.32,
+                escapeVelocity: 23.5,
+                orbitalPeriod: 60190
+            }
+        };
+
+        // Game Variables
+        let canvas, ctx;
+        let camera = { x: 0, y: 0, zoom: 1.2 };
+        let showOrbits = true;
+        let showLabels = true;
+        let showGrid = false;
+        let enablePhysics = true;
+        let animationId;
+        let time = 0;
+        let isDragging = false;
+        let lastMouseX = 0, lastMouseY = 0;
+        let planetChart = null;
+
+        // Initialize Game
+        function init() {
+            // Get canvas context
+            canvas = document.getElementById('solarCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Set initial size
+            resizeCanvas();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Update planet info
+            updatePlanetInfo('Mars');
+            
+            // Create initial chart
+            createPlanetChart('Mars');
+            
+            // Add initial log entry
+            addLogEntry('Mission Control: Advanced systems initialized. Quantum drive online.');
+            addLogEntry('Science Officer: Beginning detailed survey of Martian surface.');
+            
+            // Start animation loop
+            animate();
+            
+            // Show welcome notification
+            setTimeout(() => {
+                showNotification('Welcome to Solar System Explorer: Nexus Edition', 'Advanced systems online. Engage quantum drive for interplanetary travel.');
+            }, 1000);
+        }
+
+        // Resize canvas to fit window
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        // Update planet information panel
+        function updatePlanetInfo(planetName) {
+            const planet = PLANETS[planetName];
+            if (!planet) return;
+            
+            document.getElementById('planetName').textContent = planet.name;
+            document.getElementById('planetType').textContent = planet.type;
+            document.getElementById('planetTemp').textContent = planet.temperature;
+            document.getElementById('planetGravity').textContent = planet.gravity;
+            document.getElementById('planetDiameter').textContent = planet.diameter;
+            document.getElementById('planetDay').textContent = planet.dayLength;
+            document.getElementById('planetSolar').textContent = planet.solarConstant;
+            document.getElementById('planetAtmo').textContent = planet.atmosphere;
+            
+            // Update planet icon color and glow
+            const planetIcon = document.getElementById('planetIcon');
+            planetIcon.style.background = `linear-gradient(135deg, ${planet.color}, ${darkenColor(planet.color, 30)})`;
+            planetIcon.style.boxShadow = `0 0 40px ${planet.color}`;
+            
+            // Update HUD
+            document.getElementById('hudTarget').textContent = planet.name;
+            
+            // Calculate distance to current planet
+            if (planetName !== GameState.currentPlanet) {
+                const currentPlanet = PLANETS[GameState.currentPlanet];
+                if (currentPlanet) {
+                    const distance = Math.abs(planet.orbitRadius - currentPlanet.orbitRadius);
+                    document.getElementById('hudDistance').textContent = `${distance.toFixed(2)} AU`;
+                    
+                    // Calculate travel time (simplified)
+                    const travelTime = (distance * 50).toFixed(0);
+                    document.getElementById('hudTime').textContent = `${travelTime} DAYS`;
+                    
+                    // Calculate relative velocity
+                    const velocity = (distance * 2).toFixed(1);
+                    document.getElementById('hudVelocity').textContent = `${velocity} km/s`;
+                }
+            } else {
+                document.getElementById('hudDistance').textContent = '0.00 AU';
+                document.getElementById('hudTime').textContent = 'ARRIVED';
+                document.getElementById('hudVelocity').textContent = '0.0 km/s';
+            }
+            
+            // Update planet chart
+            createPlanetChart(planetName);
+        }
+
+        // Create planet composition chart
+        function createPlanetChart(planetName) {
+            const planet = PLANETS[planetName];
+            if (!planet || !planet.composition) return;
+            
+            const ctx = document.getElementById('planetChart').getContext('2d');
+            
+            // Destroy existing chart
+            if (planetChart) {
+                planetChart.destroy();
+            }
+            
+            const colors = {
+                Hydrogen: '#FF6B6B',
+                Helium: '#4ECDC4',
+                Iron: '#FFD166',
+                Oxygen: '#06D6A0',
+                Silicon: '#118AB2',
+                Magnesium: '#073B4C',
+                Carbon: '#6A0572',
+                Sulfur: '#FF9E00',
+                Methane: '#83C5BE'
+            };
+            
+            const labels = Object.keys(planet.composition);
+            const data = Object.values(planet.composition);
+            const backgroundColor = labels.map(label => colors[label] || '#4fc3f7');
+            
+            planetChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        // Main animation loop with enhanced visuals
+        function animate() {
+            // Clear canvas with gradient
+            const gradient = ctx.createRadialGradient(
+                canvas.width/2, canvas.height/2, 0,
+                canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height)/2
+            );
+            gradient.addColorStop(0, '#000428');
+            gradient.addColorStop(1, '#020111');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw enhanced star background
+            drawEnhancedStars();
+            
+            // Draw nebula effects
+            drawNebula();
+            
+            // Apply camera transformation
+            ctx.save();
+            ctx.translate(canvas.width / 2 + camera.x, canvas.height / 2 + camera.y);
+            ctx.scale(camera.zoom, camera.zoom);
+            
+            // Draw coordinate grid
+            if (showGrid) {
+                drawCoordinateGrid();
+            }
+            
+            // Draw orbits with enhanced visuals
+            if (showOrbits) {
+                Object.values(PLANETS).forEach(planet => {
+                    if (planet.orbitRadius > 0) {
+                        // Create orbit path
+                        ctx.beginPath();
+                        ctx.arc(0, 0, planet.orbitRadius, 0, Math.PI * 2);
+                        
+                        // Create gradient for orbit
+                        const orbitGradient = ctx.createRadialGradient(0, 0, planet.orbitRadius * 0.9, 0, 0, planet.orbitRadius * 1.1);
+                        orbitGradient.addColorStop(0, 'rgba(79, 195, 247, 0.3)');
+                        orbitGradient.addColorStop(0.5, 'rgba(79, 195, 247, 0.1)');
+                        orbitGradient.addColorStop(1, 'rgba(79, 195, 247, 0)');
+                        
+                        ctx.strokeStyle = orbitGradient;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                        
+                        // Draw orbit markers
+                        for (let i = 0; i < 12; i++) {
+                            const angle = (i * Math.PI) / 6;
+                            const x = Math.cos(angle) * planet.orbitRadius;
+                            const y = Math.sin(angle) * planet.orbitRadius;
+                            
+                            ctx.beginPath();
+                            ctx.arc(x, y, 1, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(79, 195, 247, 0.5)';
+                            ctx.fill();
+                        }
+                    }
+                });
+            }
+            
+            // Draw planets with enhanced visuals
+            Object.values(PLANETS).forEach(planet => {
+                // Calculate position with Keplerian motion
+                const orbitalSpeed = planet.orbitRadius === 0 ? 0 : 50 / Math.sqrt(planet.orbitRadius + 1);
+                const angle = time / (orbitalSpeed || 1);
+                const x = Math.cos(angle) * planet.orbitRadius;
+                const y = Math.sin(angle) * planet.orbitRadius;
+                
+                // Draw planet with enhanced effects
+                drawEnhancedPlanet(planet, x, y);
+                
+                // Highlight selected planet
+                if (planet.name === GameState.selectedPlanet) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, planet.radius + 8, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(79, 195, 247, 0.8)';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([5, 3]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Draw selection glow
+                    const glowGradient = ctx.createRadialGradient(x, y, planet.radius + 5, x, y, planet.radius + 15);
+                    glowGradient.addColorStop(0, 'rgba(79, 195, 247, 0.5)');
+                    glowGradient.addColorStop(1, 'rgba(79, 195, 247, 0)');
+                    ctx.fillStyle = glowGradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, planet.radius + 15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Draw travel path if traveling
+                if (GameState.isTraveling && GameState.travelTarget === planet.name) {
+                    drawTravelPath(planet, x, y);
+                }
+                
+                // Draw planet labels
+                if (showLabels && camera.zoom > 0.3) {
+                    ctx.fillStyle = 'white';
+                    ctx.font = `bold ${Math.max(10, 14 * camera.zoom)}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.shadowColor = 'black';
+                    ctx.shadowBlur = 3;
+                    ctx.fillText(planet.name, x, y - planet.radius - 10);
+                    ctx.shadowBlur = 0;
+                }
+            });
+            
+            // Draw spacecraft if traveling
+            if (GameState.isTraveling) {
+                drawSpacecraft();
+            }
+            
+            ctx.restore();
+            
+            // Update time for animation with time dilation
+            const timeFactor = enablePhysics ? 1 + (camera.zoom - 1) * 0.1 : 1;
+            time += 0.01 * timeFactor;
+            
+            // Update travel progress
+            if (GameState.isTraveling) {
+                updateAdvancedTravel();
+            }
+            
+            // Continue animation
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Draw enhanced star background
+        function drawEnhancedStars() {
+            // Background stars
+            for (let i = 0; i < 300; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 2;
+                const alpha = 0.3 + Math.random() * 0.7;
+                const twinkle = Math.sin(time * 2 + i) * 0.3 + 0.7;
+                
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * twinkle})`;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Bright stars
+            for (let i = 0; i < 20; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = 1.5 + Math.random() * 2;
+                
+                // Star glow
+                const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
+                glowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, size * 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Star core
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Draw nebula effects
+        function drawNebula() {
+            // Create nebula layers
+            for (let layer = 0; layer < 2; layer++) {
+                const alpha = 0.05 - layer * 0.015;
+                const scale = 0.5 + layer * 0.3;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.filter = 'blur(15px)';
+                
+                // Draw nebula cloud
+                const x = canvas.width * 0.3 + Math.sin(time * 0.05) * canvas.width * 0.1;
+                const y = canvas.height * 0.2 + Math.cos(time * 0.03) * canvas.height * 0.1;
+                const radius = canvas.width * 0.2 * scale;
+                
+                const nebulaGradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                const hue = (time * 10 + layer * 60) % 360;
+                nebulaGradient.addColorStop(0, `hsla(${hue}, 70%, 60%, 0.8)`);
+                nebulaGradient.addColorStop(1, `hsla(${hue + 30}, 70%, 50%, 0)`);
+                
+                ctx.fillStyle = nebulaGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        // Draw coordinate grid
+        function drawCoordinateGrid() {
+            const gridSize = 100;
+            const gridColor = 'rgba(79, 195, 247, 0.1)';
+            
+            ctx.strokeStyle = gridColor;
+            ctx.lineWidth = 0.5;
+            
+            // Calculate visible area
+            const visibleWidth = canvas.width / camera.zoom;
+            const visibleHeight = canvas.height / camera.zoom;
+            const centerX = -camera.x / camera.zoom;
+            const centerY = -camera.y / camera.zoom;
+            
+            // Vertical lines
+            const startX = Math.floor((-visibleWidth/2 - centerX) / gridSize) * gridSize;
+            const endX = Math.ceil((visibleWidth/2 - centerX) / gridSize) * gridSize;
+            
+            for (let x = startX; x <= endX; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, -visibleHeight/2);
+                ctx.lineTo(x, visibleHeight/2);
+                ctx.stroke();
+            }
+            
+            // Horizontal lines
+            const startY = Math.floor((-visibleHeight/2 - centerY) / gridSize) * gridSize;
+            const endY = Math.ceil((visibleHeight/2 - centerY) / gridSize) * gridSize;
+            
+            for (let y = startY; y <= endY; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(-visibleWidth/2, y);
+                ctx.lineTo(visibleWidth/2, y);
+                ctx.stroke();
+            }
+            
+            // Center axes
+            ctx.strokeStyle = 'rgba(79, 195, 247, 0.3)';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(-visibleWidth/2, 0);
+            ctx.lineTo(visibleWidth/2, 0);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(0, -visibleHeight/2);
+            ctx.lineTo(0, visibleHeight/2);
+            ctx.stroke();
+        }
+
+        // Draw enhanced planet with realistic features
+        function drawEnhancedPlanet(planet, x, y) {
+            // Save context
+            ctx.save();
+            
+            // Create planet body
+            const planetGradient = ctx.createRadialGradient(
+                x - planet.radius * 0.3, y - planet.radius * 0.3, 0,
+                x, y, planet.radius
+            );
+            
+            if (planet.name === 'Sun') {
+                // Sun with corona
+                planetGradient.addColorStop(0, '#FFFFFF');
+                planetGradient.addColorStop(0.3, '#FFD700');
+                planetGradient.addColorStop(0.7, '#FF8C00');
+                planetGradient.addColorStop(1, '#FF4500');
+                
+                // Draw sun glow
+                const sunGlow = ctx.createRadialGradient(x, y, 0, x, y, planet.radius * 3);
+                sunGlow.addColorStop(0, 'rgba(255, 215, 0, 0.5)');
+                sunGlow.addColorStop(1, 'rgba(255, 69, 0, 0)');
+                
+                ctx.fillStyle = sunGlow;
+                ctx.beginPath();
+                ctx.arc(x, y, planet.radius * 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Solar flares
+                for (let i = 0; i < 8; i++) {
+                    const flareAngle = (i * Math.PI) / 4 + time;
+                    const flareLength = planet.radius * (1.5 + Math.sin(time * 3 + i) * 0.5);
+                    const flareX = x + Math.cos(flareAngle) * flareLength;
+                    const flareY = y + Math.sin(flareAngle) * flareLength;
+                    
+                    const flareGradient = ctx.createLinearGradient(x, y, flareX, flareY);
+                    flareGradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
+                    flareGradient.addColorStop(1, 'rgba(255, 69, 0, 0)');
+                    
+                    ctx.strokeStyle = flareGradient;
+                    ctx.lineWidth = planet.radius * 0.1;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(flareX, flareY);
+                    ctx.stroke();
+                }
+            } else {
+                // Regular planet with gradient
+                planetGradient.addColorStop(0, lightenColor(planet.color, 30));
+                planetGradient.addColorStop(0.7, planet.color);
+                planetGradient.addColorStop(1, darkenColor(planet.color, 30));
+                
+                // Planet atmosphere glow
+                if (planet.atmosphere !== 'Trace') {
+                    const atmosphereGradient = ctx.createRadialGradient(x, y, planet.radius, x, y, planet.radius * 1.3);
+                    atmosphereGradient.addColorStop(0, `rgba(79, 195, 247, 0.2)`);
+                    atmosphereGradient.addColorStop(1, 'rgba(79, 195, 247, 0)');
+                    ctx.fillStyle = atmosphereGradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, planet.radius * 1.3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Draw planet body
+            ctx.fillStyle = planetGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, planet.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Planet surface details
+            if (planet.radius > 5 && planet.name !== 'Sun') {
+                ctx.fillStyle = darkenColor(planet.color, 20);
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i * Math.PI * 2) / 8;
+                    const detailX = x + Math.cos(angle) * planet.radius * 0.7;
+                    const detailY = y + Math.sin(angle) * planet.radius * 0.7;
+                    const detailSize = planet.radius * 0.2;
+                    
+                    ctx.beginPath();
+                    ctx.arc(detailX, detailY, detailSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Saturn's rings
+            if (planet.name === 'Saturn' && planet.ringSystem) {
+                drawSaturnRings(x, y, planet.radius);
+            }
+            
+            ctx.restore();
+        }
+
+        // Draw Saturn's rings with detail
+        function drawSaturnRings(x, y, planetRadius) {
+            ctx.save();
+            
+            // Draw multiple ring layers
+            const ringLayers = [
+                { width: planetRadius * 0.1, color: 'rgba(210, 180, 140, 0.8)', distance: planetRadius * 1.2 },
+                { width: planetRadius * 0.15, color: 'rgba(255, 255, 255, 0.6)', distance: planetRadius * 1.5 },
+                { width: planetRadius * 0.2, color: 'rgba(200, 200, 200, 0.4)', distance: planetRadius * 1.8 }
+            ];
+            
+            ringLayers.forEach(ring => {
+                const ringGradient = ctx.createLinearGradient(
+                    x - ring.distance, y,
+                    x + ring.distance, y
+                );
+                ringGradient.addColorStop(0, 'transparent');
+                ringGradient.addColorStop(0.3, ring.color);
+                ringGradient.addColorStop(0.5, lightenColor(ring.color, 30));
+                ringGradient.addColorStop(0.7, ring.color);
+                ringGradient.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = ringGradient;
+                ctx.fillRect(x - ring.distance, y - ring.width/2, ring.distance * 2, ring.width);
+            });
+            
+            ctx.restore();
+        }
+
+        // Draw travel path with trajectory calculation
+        function drawTravelPath(targetPlanet, targetX, targetY) {
+            const currentPlanet = PLANETS[GameState.currentPlanet];
+            if (!currentPlanet) return;
+            
+            // Calculate current planet position
+            const currentOrbitalSpeed = 50 / Math.sqrt(currentPlanet.orbitRadius + 1);
+            const currentAngle = time / currentOrbitalSpeed;
+            const currentX = Math.cos(currentAngle) * currentPlanet.orbitRadius;
+            const currentY = Math.sin(currentAngle) * currentPlanet.orbitRadius;
+            
+            // Draw travel trajectory
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY);
+            ctx.lineTo(targetX, targetY);
+            
+            ctx.strokeStyle = 'rgba(79, 195, 247, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw travel markers
+            const progress = GameState.travelProgress / 100;
+            const markerX = currentX + (targetX - currentX) * progress;
+            const markerY = currentY + (targetY - currentY) * progress;
+            
+            ctx.fillStyle = 'rgba(79, 195, 247, 0.8)';
+            ctx.beginPath();
+            ctx.arc(markerX, markerY, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw spacecraft with details
+        function drawSpacecraft() {
+            const currentPlanet = PLANETS[GameState.currentPlanet];
+            const targetPlanet = PLANETS[GameState.travelTarget];
+            
+            if (!currentPlanet || !targetPlanet) return;
+            
+            // Calculate positions
+            const currentOrbitalSpeed = 50 / Math.sqrt(currentPlanet.orbitRadius + 1);
+            const currentAngle = time / currentOrbitalSpeed;
+            const currentX = Math.cos(currentAngle) * currentPlanet.orbitRadius;
+            const currentY = Math.sin(currentAngle) * currentPlanet.orbitRadius;
+            
+            const targetOrbitalSpeed = 50 / Math.sqrt(targetPlanet.orbitRadius + 1);
+            const targetAngle = time / targetOrbitalSpeed;
+            const targetX = Math.cos(targetAngle) * targetPlanet.orbitRadius;
+            const targetY = Math.sin(targetAngle) * targetPlanet.orbitRadius;
+            
+            // Calculate spacecraft position along path
+            const progress = GameState.travelProgress / 100;
+            const shipX = currentX + (targetX - currentX) * progress;
+            const shipY = currentY + (targetY - currentY) * progress;
+            
+            // Draw spacecraft
+            ctx.save();
+            ctx.translate(shipX, shipY);
+            ctx.rotate(time * 2); // Rotate spacecraft
+            
+            // Spacecraft body
+            ctx.fillStyle = '#4fc3f7';
+            ctx.fillRect(-4, -8, 8, 16);
+            
+            // Spacecraft wings
+            ctx.fillStyle = '#3a5fd0';
+            ctx.fillRect(-8, -4, 16, 8);
+            
+            // Engine glow
+            const engineGradient = ctx.createRadialGradient(0, 12, 0, 0, 12, 15);
+            engineGradient.addColorStop(0, 'rgba(255, 100, 100, 0.8)');
+            engineGradient.addColorStop(0.5, 'rgba(255, 200, 100, 0.4)');
+            engineGradient.addColorStop(1, 'rgba(255, 200, 100, 0)');
+            
+            ctx.fillStyle = engineGradient;
+            ctx.beginPath();
+            ctx.ellipse(0, 12, 5, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        // Update advanced travel with realistic physics
+        function updateAdvancedTravel() {
+            if (!GameState.isTraveling) return;
+            
+            const currentPlanet = PLANETS[GameState.currentPlanet];
+            const targetPlanet = PLANETS[GameState.travelTarget];
+            
+            if (!currentPlanet || !targetPlanet) return;
+            
+            // Calculate distance between orbits
+            const distance = Math.abs(targetPlanet.orbitRadius - currentPlanet.orbitRadius);
+            
+            // Realistic travel time calculation (simplified)
+            const travelSpeed = GameState.spacecraft.speed / 1000; // km/s to AU/s (simplified)
+            const travelTime = distance / travelSpeed;
+            
+            // Update progress
+            const progressIncrement = GameState.travelSpeed / travelTime;
+            GameState.travelProgress = Math.min(100, GameState.travelProgress + progressIncrement);
+            
+            // Update travel mode display
+            updateTravelModeDisplay();
+            
+            // Consume fuel based on distance and spacecraft efficiency
+            const fuelConsumption = (distance * 0.1) / GameState.spacecraft.speed;
+            GameState.fuel = Math.max(0, GameState.fuel - fuelConsumption * 0.1);
+            
+            if (GameState.travelProgress >= 100) {
+                completeAdvancedTravel();
+            }
+            
+            // Update UI
+            updateUI();
+        }
+
+        // Update travel mode display
+        function updateTravelModeDisplay() {
+            const travelMode = document.getElementById('travelMode');
+            const travelProgressBar = document.getElementById('travelProgressBar');
+            
+            if (GameState.isTraveling) {
+                travelMode.style.display = 'block';
+                travelProgressBar.style.width = `${GameState.travelProgress}%`;
+            } else {
+                travelMode.style.display = 'none';
+            }
+        }
+
+        // Complete travel with advanced effects
+        function completeAdvancedTravel() {
+            GameState.isTraveling = false;
+            const targetPlanet = GameState.travelTarget;
+            GameState.currentPlanet = targetPlanet;
+            GameState.travelTarget = null;
+            GameState.travelProgress = 0;
+            
+            // Update discovered planets
+            if (!GameState.discoveredPlanets.includes(targetPlanet)) {
+                GameState.discoveredPlanets.push(targetPlanet);
+                GameState.science += 250;
+                showNotification('First Contact!', `Discovered ${targetPlanet}! Advanced scan data available. +250 science.`);
+                addLogEntry(`Quantum sensors detect new celestial body: ${targetPlanet}`);
+            }
+            
+            // Update planet info
+            updatePlanetInfo(targetPlanet);
+            
+            // Update UI
+            updateUI();
+            
+            // Hide travel mode
+            document.getElementById('travelMode').style.display = 'none';
+            
+            showNotification('Orbital Insertion Complete', `Successfully established orbit around ${targetPlanet}.`);
+            addLogEntry(`Gravity assist maneuver complete. Now orbiting ${targetPlanet}.`);
+        }
+
+        // Start advanced travel with trajectory calculation
+        function startAdvancedTravel(planetName) {
+            if (GameState.isTraveling) {
+                showNotification('Travel In Progress', 'Complete current journey before initiating new trajectory.');
+                return;
+            }
+            
+            if (GameState.fuel < 20) {
+                showNotification('Insufficient Fuel', 'Minimum 20% fuel required for interplanetary travel.');
+                return;
+            }
+            
+            const targetPlanet = PLANETS[planetName];
+            const currentPlanet = PLANETS[GameState.currentPlanet];
+            
+            if (!targetPlanet || !currentPlanet) return;
+            
+            // Calculate travel parameters
+            const distance = Math.abs(targetPlanet.orbitRadius - currentPlanet.orbitRadius);
+            const travelTime = (distance * 75).toFixed(0); // Simplified calculation
+            const fuelCost = Math.min(30, distance * 2);
+            const deltaV = (distance * 1.5).toFixed(1);
+            
+            // Update travel mode display
+            document.getElementById('travelTarget').textContent = `Traveling to: ${planetName}`;
+            document.getElementById('travelDuration').textContent = `${travelTime} days`;
+            document.getElementById('travelFuel').textContent = `${fuelCost}%`;
+            document.getElementById('travelDeltaV').textContent = `${deltaV} km/s`;
+            document.getElementById('travelTrajectory').textContent = distance > 100 ? 'Bi-elliptic' : 'Hohmann';
+            
+            // Start travel
+            GameState.isTraveling = true;
+            GameState.travelTarget = planetName;
+            GameState.travelProgress = 0;
+            
+            showNotification('Trajectory Calculated', `Initiating ${travelTime}-day journey to ${planetName}.`);
+            addLogEntry(`Course plotted to ${planetName}. Engaging quantum drive.`);
+            
+            // Update HUD
+            document.getElementById('hudTarget').textContent = planetName;
+            
+            // Show travel mode
+            updateTravelModeDisplay();
+        }
+
+        // Perform advanced scan with tier-based results
+        function performAdvancedScan() {
+            if (GameState.isTraveling) {
+                showNotification('Scan Systems Offline', 'Quantum scanners cannot operate during warp travel.');
+                return;
+            }
+            
+            const planet = PLANETS[GameState.currentPlanet];
+            if (!planet) return;
+            
+            // Scanner tier affects results
+            const scannerTier = GameState.spacecraft.scannerTier;
+            let resourceCount = 1 + scannerTier;
+            let scienceGain = 50 * scannerTier;
+            
+            if (scannerTier >= 3) {
+                resourceCount += 2; // Advanced scanners find more
+                scienceGain += 100;
+            }
+            
+            // Generate scan results based on planet type
+            let possibleResources = [...planet.resources];
+            
+            // Add special resources for advanced scanners
+            if (scannerTier >= 2) {
+                possibleResources.push('Exotic Particles', 'Quantum Signatures', 'Gravitational Anomalies');
+            }
+            if (scannerTier >= 3) {
+                possibleResources.push('Dark Matter Traces', 'Temporal Fluctuations');
+            }
+            
+            // Select found resources
+            const foundResources = [];
+            for (let i = 0; i < Math.min(resourceCount, possibleResources.length); i++) {
+                const resource = possibleResources[Math.floor(Math.random() * possibleResources.length)];
+                if (!foundResources.includes(resource)) {
+                    foundResources.push(resource);
+                }
+            }
+            
+            // Update scan results display
+            const resourceGrid = document.getElementById('resourceGrid');
+            
+            resourceGrid.innerHTML = foundResources.map(resource => `
+                <div style="background: rgba(79, 195, 247, 0.2); border-radius: 8px; padding: 10px; text-align: center;">
+                    <div style="font-size: 12px; color: #a0c8ff; margin-bottom: 5px;">${resource}</div>
+                    <div style="font-size: 11px; color: #4fc3f7;">
+                        <i class="fas fa-signal"></i> ${Math.floor(Math.random() * 90 + 10)}%
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add science
+            GameState.science += scienceGain;
+            
+            // Add log entry
+            addLogEntry(`Deep scan of ${planet.name} completed. Tier ${scannerTier} scanner detected ${foundResources.length} resources. +${scienceGain} science.`);
+            
+            // Update UI
+            updateUI();
+            
+            showNotification('Quantum Scan Complete', `Scanner Tier ${scannerTier} analysis finished. +${scienceGain} science.`);
+            
+            // Add resources to inventory
+            foundResources.forEach(resource => {
+                if (GameState.inventory[resource]) {
+                    GameState.inventory[resource].count++;
+                } else if (resource !== 'Quantum Signatures' && resource !== 'Gravitational Anomalies') {
+                    // Add new resource type
+                    GameState.inventory[resource] = {
+                        count: 1,
+                        icon: getResourceIcon(resource),
+                        color: getResourceColor(resource)
+                    };
+                }
+            });
+        }
+
+        // Collect advanced sample
+        function collectAdvancedSample() {
+            if (GameState.isTraveling) {
+                showNotification('Collection Systems Offline', 'Robotic arms secured during travel.');
+                return;
+            }
+            
+            const planet = PLANETS[GameState.currentPlanet];
+            if (!planet) return;
+            
+            // Determine sample type based on planet
+            let sampleType = 'Minerals';
+            let scienceGain = 25;
+            let creditGain = 100;
+            
+            if (planet.type.includes('Gas')) {
+                sampleType = 'Gases';
+                scienceGain = 35;
+                creditGain = 150;
+            } else if (planet.type.includes('Ice')) {
+                sampleType = 'Water';
+                scienceGain = 40;
+                creditGain = 120;
+            }
+            
+            // Add to inventory
+            if (GameState.inventory[sampleType]) {
+                GameState.inventory[sampleType].count++;
+            }
+            
+            // Gain rewards
+            GameState.science += scienceGain;
+            GameState.credits += creditGain;
+            
+            // Update UI
+            updateUI();
+            
+            addLogEntry(`Collected ${sampleType.toLowerCase()} sample from ${planet.name}. +${scienceGain} science, +${creditGain} credits.`);
+            showNotification('Sample Acquired', `${sampleType} sample added to inventory. +${scienceGain} science.`);
+        }
+
+        // Perform analysis
+        function performAnalysis() {
+            if (GameState.isTraveling) {
+                showNotification('Analysis Systems Offline', 'Laboratory modules inactive during travel.');
+                return;
+            }
+            
+            // Check if we have samples to analyze
+            let hasSamples = false;
+            Object.values(GameState.inventory).forEach(item => {
+                if (item.count > 0) hasSamples = true;
+            });
+            
+            if (!hasSamples) {
+                showNotification('No Samples', 'Collect samples before analysis.');
+                return;
+            }
+            
+            // Consume one sample of each type and gain science
+            let totalScience = 0;
+            Object.keys(GameState.inventory).forEach(resource => {
+                if (GameState.inventory[resource].count > 0) {
+                    GameState.inventory[resource].count--;
+                    totalScience += 50; // Base science per sample
+                    
+                    // Bonus for rare samples
+                    if (resource === 'Exotic Particles' || resource === 'Dark Matter Traces') {
+                        totalScience += 200;
+                    }
+                }
+            });
+            
+            GameState.science += totalScience;
+            
+            // Update UI
+            updateUI();
+            
+            addLogEntry(`Laboratory analysis complete. +${totalScience} science from sample examination.`);
+            showNotification('Analysis Complete', `Laboratory processed samples. +${totalScience} science.`);
+        }
+
+        // Update UI elements
+        function updateUI() {
+            document.getElementById('credits').textContent = GameState.credits.toLocaleString();
+            document.getElementById('fuel').textContent = `${Math.floor(GameState.fuel)}%`;
+            document.getElementById('science').textContent = GameState.science.toLocaleString();
+            document.getElementById('energy').textContent = `${Math.floor(GameState.energy)}%`;
+        }
+
+        // Add entry to discovery log
+        function addLogEntry(message) {
+            const log = document.getElementById('discoveryLog');
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            
+            const entry = document.createElement('div');
+            entry.style.padding = '10px';
+            entry.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+            entry.style.transition = 'all 0.3s';
+            entry.innerHTML = `
+                <div style="font-size: 11px; color: #4fc3f7; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                    <i class="far fa-clock"></i> ${timeString}
+                </div>
+                <div style="font-size: 13px; line-height: 1.4;">${message}</div>
+            `;
+            
+            entry.addEventListener('mouseenter', () => {
+                entry.style.backgroundColor = 'rgba(79, 195, 247, 0.1)';
+            });
+            
+            entry.addEventListener('mouseleave', () => {
+                entry.style.backgroundColor = 'transparent';
+            });
+            
+            log.prepend(entry);
+            
+            // Limit to 15 entries
+            if (log.children.length > 15) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // Show enhanced notification
+        function showNotification(title, message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <h4><i class="fas fa-bell"></i> ${title}</h4>
+                <p>${message}</p>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds with animation
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100px)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 500);
+            }, 5000);
+        }
+
+        // Setup enhanced event listeners
+        function setupEventListeners() {
+            // Window resize
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Canvas mouse events
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                canvas.style.cursor = 'grabbing';
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const dx = e.clientX - lastMouseX;
+                const dy = e.clientY - lastMouseY;
+                
+                camera.x += dx;
+                camera.y += dy;
+                
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            });
+            
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+                canvas.style.cursor = 'default';
+            });
+            
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                const oldZoom = camera.zoom;
+                camera.zoom *= zoomFactor;
+                camera.zoom = Math.max(0.1, Math.min(10, camera.zoom));
+                
+                // Zoom toward mouse position
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const worldX = (mouseX - canvas.width / 2 - camera.x) / oldZoom;
+                const worldY = (mouseY - canvas.height / 2 - camera.y) / oldZoom;
+                
+                camera.x = mouseX - canvas.width / 2 - worldX * camera.zoom;
+                camera.y = mouseY - canvas.height / 2 - worldY * camera.zoom;
+            });
+            
+            // Button events
+            document.getElementById('scanBtn').addEventListener('click', performAdvancedScan);
+            document.getElementById('collectBtn').addEventListener('click', collectAdvancedSample);
+            document.getElementById('analyzeBtn').addEventListener('click', performAnalysis);
+            document.getElementById('travelBtn').addEventListener('click', () => {
+                if (GameState.selectedPlanet !== GameState.currentPlanet) {
+                    if (confirm(`Initiate travel to ${GameState.selectedPlanet}?`)) {
+                        startAdvancedTravel(GameState.selectedPlanet);
+                    }
+                } else {
+                    showNotification('Already at Destination', `Already orbiting ${GameState.currentPlanet}.`);
+                }
+            });
+            
+            // Control buttons
+            document.getElementById('toggleOrbits').addEventListener('click', () => {
+                showOrbits = !showOrbits;
+                showNotification('Orbit Display', showOrbits ? 'Planetary orbits shown' : 'Planetary orbits hidden');
+            });
+            
+            document.getElementById('toggleLabels').addEventListener('click', () => {
+                showLabels = !showLabels;
+                showNotification('Label Display', showLabels ? 'Planetary labels shown' : 'Planetary labels hidden');
+            });
+            
+            document.getElementById('toggleGrid').addEventListener('click', () => {
+                showGrid = !showGrid;
+                showNotification('Grid Display', showGrid ? 'Coordinate grid shown' : 'Coordinate grid hidden');
+            });
+            
+            document.getElementById('togglePhysics').addEventListener('click', () => {
+                enablePhysics = !enablePhysics;
+                showNotification('Physics Simulation', enablePhysics ? 'Newtonian physics enabled' : 'Simplified physics enabled');
+            });
+            
+            document.getElementById('zoomIn').addEventListener('click', () => {
+                camera.zoom *= 1.3;
+                camera.zoom = Math.min(10, camera.zoom);
+            });
+            
+            document.getElementById('zoomOut').addEventListener('click', () => {
+                camera.zoom *= 0.7;
+                camera.zoom = Math.max(0.1, camera.zoom);
+            });
+            
+            document.getElementById('resetView').addEventListener('click', () => {
+                camera.x = 0;
+                camera.y = 0;
+                camera.zoom = 1.2;
+                selectPlanet('Sun');
+            });
+            
+            // Travel mode cancel
+            document.getElementById('cancelTravel').addEventListener('click', () => {
+                if (GameState.isTraveling) {
+                    if (confirm('Abort current travel mission? Fuel will not be refunded.')) {
+                        GameState.isTraveling = false;
+                        GameState.travelTarget = null;
+                        GameState.travelProgress = 0;
+                        document.getElementById('travelMode').style.display = 'none';
+                        showNotification('Travel Aborted', 'Journey cancelled. Returning to standard operations.');
+                        addLogEntry('Travel sequence manually aborted by operator.');
+                    }
+                }
+            });
+            
+            // Mobile panel toggle
+            document.getElementById('toggleRightPanel').addEventListener('click', () => {
+                document.getElementById('rightPanel').classList.toggle('active');
+            });
+            
+            // Click on canvas to select planets
+            canvas.addEventListener('click', (e) => {
+                if (isDragging) {
+                    setTimeout(() => { isDragging = false; }, 50);
+                    return;
+                }
+                
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Convert screen coordinates to world coordinates
+                const worldX = (x - canvas.width / 2 - camera.x) / camera.zoom;
+                const worldY = (y - canvas.height / 2 - camera.y) / camera.zoom;
+                
+                // Check if click is near any planet
+                let closestPlanet = null;
+                let closestDistance = Infinity;
+                
+                Object.values(PLANETS).forEach(planet => {
+                    // Calculate planet position
+                    const orbitalSpeed = planet.orbitRadius === 0 ? 0 : 50 / Math.sqrt(planet.orbitRadius + 1);
+                    const angle = time / (orbitalSpeed || 1);
+                    const planetX = Math.cos(angle) * planet.orbitRadius;
+                    const planetY = Math.sin(angle) * planet.orbitRadius;
+                    
+                    // Calculate distance
+                    const dx = planetX - worldX;
+                    const dy = planetY - worldY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Check if click is within planet radius
+                    const clickRadius = planet.radius * (planet.name === 'Sun' ? 4 : 2.5);
+                    if (distance < clickRadius && distance < closestDistance) {
+                        closestDistance = distance;
+                        closestPlanet = planet;
+                    }
+                });
+                
+                if (closestPlanet) {
+                    selectPlanet(closestPlanet.name);
+                }
+            });
+            
+            // Keyboard controls
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case ' ':
+                        performAdvancedScan();
+                        break;
+                    case 'c':
+                        collectAdvancedSample();
+                        break;
+                    case 't':
+                        if (GameState.selectedPlanet !== GameState.currentPlanet) {
+                            startAdvancedTravel(GameState.selectedPlanet);
+                        }
+                        break;
+                    case 'o':
+                        showOrbits = !showOrbits;
+                        break;
+                    case '+':
+                    case '=':
+                        camera.zoom *= 1.2;
+                        break;
+                    case '-':
+                    case '_':
+                        camera.zoom *= 0.8;
+                        break;
+                    case '0':
+                        camera.x = 0;
+                        camera.y = 0;
+                        camera.zoom = 1.2;
+                        break;
+                    case 'Escape':
+                        if (window.innerWidth <= 1200) {
+                            document.getElementById('rightPanel').classList.remove('active');
+                        }
+                        break;
+                }
+                
+                if ([' ', '+', '=', '-', '_'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Select a planet
+        function selectPlanet(planetName) {
+            const planet = PLANETS[planetName];
+            if (!planet) return;
+            
+            GameState.selectedPlanet = planetName;
+            updatePlanetInfo(planetName);
+            
+            // Show info notification
+            if (planetName !== GameState.currentPlanet) {
+                showNotification(`Target Acquired: ${planet.name}`, 
+                    `${planet.description} Distance: ${document.getElementById('hudDistance').textContent}`);
+            }
+        }
+
+        // Utility functions
+        function darkenColor(color, percent) {
+            return color;
+        }
+
+        function lightenColor(color, percent) {
+            return color;
+        }
+
+        function getResourceIcon(resource) {
+            const icons = {
+                'Water': 'fa-tint',
+                'Minerals': 'fa-gem',
+                'Gases': 'fa-wind',
+                'Organic': 'fa-seedling',
+                'Metals': 'fa-cog',
+                'Data': 'fa-database',
+                'Solar Energy': 'fa-sun',
+                'Helium-3': 'fa-atom',
+                'Exotic Particles': 'fa-star',
+                'Quantum Signatures': 'fa-bolt'
+            };
+            return icons[resource] || 'fa-box';
+        }
+
+        function getResourceColor(resource) {
+            const colors = {
+                'Water': '#1E90FF',
+                'Minerals': '#FFD700',
+                'Gases': '#98FB98',
+                'Organic': '#32CD32',
+                'Metals': '#C0C0C0',
+                'Data': '#4fc3f7',
+                'Solar Energy': '#FFD700',
+                'Helium-3': '#87CEEB',
+                'Exotic Particles': '#FF69B4',
+                'Quantum Signatures': '#9370DB'
+            };
+            return colors[resource] || '#4fc3f7';
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', init);
+
+        // Handle page visibility
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            } else {
+                if (!animationId) {
+                    animate();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
